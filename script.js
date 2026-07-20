@@ -5,11 +5,12 @@
 
 // 1) Messenger username only — do not include @ or the full URL.
 // Example: const MESSENGER_USERNAME = "mfxcreativee";
-const MESSENGER_USERNAME = "430269683495305";
+const MESSENGER_USERNAME = "SEU_USUARIO_AQUI";
 
-// 2) Formspree endpoint.
-// Replace YOUR_FORM_ID in index.html:
-// https://formspree.io/f/xpqvrnrd
+// 2) Google Apps Script Web App URL.
+// After deploying your Apps Script as a Web App, paste the /exec URL here.
+// Example: https://script.google.com/macros/s/AKfycb.../exec
+const GOOGLE_SHEETS_WEB_APP_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
 
 /* =========================================================
    PAGE BEHAVIOUR
@@ -55,9 +56,7 @@ function initialiseFaq() {
 function initialiseContactForm() {
   const form = document.getElementById("contact-form");
 
-  if (!form) {
-    return;
-  }
+  if (!form) return;
 
   const submitButton = form.querySelector(".form-submit");
   const status = form.querySelector(".form-status");
@@ -67,19 +66,19 @@ function initialiseContactForm() {
     clearFieldErrors(form);
     clearStatus(status);
 
-    const isValid = validateForm(form);
-
-    if (!isValid) {
+    if (!validateForm(form)) {
       setStatus(status, "Please check the highlighted fields.", "error");
       return;
     }
 
-    const endpoint = form.action;
-
-    if (endpoint.includes("YOUR_FORM_ID")) {
+    if (
+      !GOOGLE_SHEETS_WEB_APP_URL ||
+      GOOGLE_SHEETS_WEB_APP_URL.includes("COLE_AQUI") ||
+      !GOOGLE_SHEETS_WEB_APP_URL.includes("script.google.com")
+    ) {
       setStatus(
         status,
-        "Formspree is not configured yet. Replace YOUR_FORM_ID before publishing.",
+        "The contact form is not connected yet. Please configure the Google Apps Script URL.",
         "error"
       );
       return;
@@ -88,18 +87,24 @@ function initialiseContactForm() {
     submitButton.disabled = true;
     submitButton.classList.add("is-loading");
 
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        body: new FormData(form),
-        headers: {
-          Accept: "application/json"
-        }
-      });
+    const payload = new URLSearchParams({
+      name: form.querySelector("#name").value.trim(),
+      email: form.querySelector("#email").value.trim(),
+      business: form.querySelector("#business").value.trim(),
+      message: form.querySelector("#message").value.trim()
+    });
 
-      if (!response.ok) {
-        throw new Error("The form could not be submitted.");
-      }
+    try {
+      // mode: "no-cors" avoids browser CORS issues commonly encountered
+      // with Apps Script Web Apps hosted on a different domain.
+      await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: payload.toString()
+      });
 
       form.reset();
       setStatus(
@@ -108,6 +113,7 @@ function initialiseContactForm() {
         "success"
       );
     } catch (error) {
+      console.error("Form submission error:", error);
       setStatus(
         status,
         "Something went wrong. Please try again or contact me through Messenger.",
@@ -122,7 +128,6 @@ function initialiseContactForm() {
 
 function validateForm(form) {
   let isValid = true;
-
   const nameField = form.querySelector("#name");
   const emailField = form.querySelector("#email");
 
@@ -145,7 +150,6 @@ function validateForm(form) {
 function showFieldError(field, message) {
   const group = field.closest(".form-group");
   const error = group.querySelector(".field-error");
-
   group.classList.add("has-error");
   field.setAttribute("aria-invalid", "true");
   error.textContent = message;
@@ -154,17 +158,10 @@ function showFieldError(field, message) {
 function clearFieldErrors(form) {
   form.querySelectorAll(".form-group.has-error").forEach((group) => {
     group.classList.remove("has-error");
-
     const field = group.querySelector("input, textarea");
     const error = group.querySelector(".field-error");
-
-    if (field) {
-      field.removeAttribute("aria-invalid");
-    }
-
-    if (error) {
-      error.textContent = "";
-    }
+    if (field) field.removeAttribute("aria-invalid");
+    if (error) error.textContent = "";
   });
 }
 
@@ -184,8 +181,5 @@ function clearStatus(element) {
 
 function updateFooterYear() {
   const yearElement = document.getElementById("current-year");
-
-  if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
-  }
+  if (yearElement) yearElement.textContent = new Date().getFullYear();
 }

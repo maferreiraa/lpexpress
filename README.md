@@ -95,3 +95,11 @@ Select the main branch and root folder.
 - Sua Voz, Seu Poder — https://noemiahalvez.com/
 - MFX Creativee — https://mfxcreativee.com.br/
 - Alçar Serviços Elétricos — private project, without a public link
+
+
+## Portfolio screenshots
+The `Recent work` section now uses real screenshots stored in:
+
+- `assets/project-noemiah.webp`
+- `assets/project-mfx.webp`
+- `assets/project-alcar.webp`
