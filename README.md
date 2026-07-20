@@ -34,3 +34,17 @@ This prevents the vertical screenshot from expanding the project card.
 
 ## Formspree
 Removed from the active HTML and JavaScript integration.
+
+
+## Meta Pixel
+
+Pixel ID: `335141833824895`
+
+Configured events:
+
+- `PageView`: fired when the landing page loads.
+- `Contact`: fired when a visitor clicks any Messenger CTA.
+- `Lead`: fired after the contact form submission request is sent.
+
+The Pixel base code is installed in `index.html`.
+The `Contact` and `Lead` event logic is in `script.js`.

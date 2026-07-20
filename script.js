@@ -16,12 +16,26 @@ document.addEventListener("DOMContentLoaded", () => {
   updateFooterYear();
 });
 
+
+function trackMetaEvent(eventName, parameters = {}) {
+  if (typeof window.fbq === "function") {
+    window.fbq("track", eventName, parameters);
+  }
+}
+
 function configureMessengerLinks() {
   const links = document.querySelectorAll(".messenger-link");
   const messengerUrl = `https://m.me/${MESSENGER_USERNAME}`;
 
   links.forEach((link) => {
     link.href = messengerUrl;
+
+    link.addEventListener("click", () => {
+      trackMetaEvent("Contact", {
+        content_name: "Messenger",
+        contact_method: "Messenger"
+      });
+    });
   });
 }
 
@@ -88,6 +102,12 @@ function initialiseContactForm() {
       });
 
       form.reset();
+
+      // Meta Pixel: completed contact form submission
+      trackMetaEvent("Lead", {
+        content_name: "Landing Page Enquiry",
+        lead_source: "Website Contact Form"
+      });
 
       setStatus(
         status,
