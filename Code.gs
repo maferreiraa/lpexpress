@@ -1,16 +1,13 @@
+const SPREADSHEET_ID = "1jPVjzp1stDpGQ4H_llsiMwxN_PfPjzgbtXgPbFGaqCI";
 const SHEET_NAME = "Leads";
 
 function doPost(e) {
   try {
-    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
     let sheet = spreadsheet.getSheetByName(SHEET_NAME);
 
     if (!sheet) {
       sheet = spreadsheet.insertSheet(SHEET_NAME);
-    }
-
-    // Create headers automatically if the sheet is empty.
-    if (sheet.getLastRow() === 0) {
       sheet.appendRow([
         "Timestamp",
         "Name",
@@ -18,32 +15,70 @@ function doPost(e) {
         "Business / Project",
         "Message"
       ]);
-      sheet.setFrozenRows(1);
     }
 
-    const data = e && e.parameter ? e.parameter : {};
+    // Log incoming data for debugging
+    console.log(JSON.stringify(e.parameter));
+
+    const name = e.parameter.name || "";
+    const email = e.parameter.email || "";
+    const business = e.parameter.business || "";
+    const message = e.parameter.message || "";
 
     sheet.appendRow([
       new Date(),
-      sanitizeCell(data.name),
-      sanitizeCell(data.email),
-      sanitizeCell(data.business),
-      sanitizeCell(data.message)
+      name,
+      email,
+      business,
+      message
     ]);
 
+    SpreadsheetApp.flush();
+
     return ContentService
-      .createTextOutput(JSON.stringify({ ok: true }))
+      .createTextOutput(JSON.stringify({
+        status: "success",
+        received: e.parameter
+      }))
       .setMimeType(ContentService.MimeType.JSON);
+
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: false, error: String(error) }))
-      .setMimeType(ContentService.MimeType.JSON);
+    console.error(error.stack || error.toString());
+    throw error;
   }
 }
 
-// Prevent values beginning with =, +, -, or @ from being interpreted
-// as spreadsheet formulas when submitted by a visitor.
-function sanitizeCell(value) {
-  const text = String(value || "").trim();
-  return /^[=+\-@]/.test(text) ? "'" + text : text;
+// Open the /exec URL in a browser to confirm the deployment is live.
+function doGet() {
+  return ContentService
+    .createTextOutput("Landing Page Express Leads integration is online.")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+// Run this manually once inside Apps Script.
+// If this row appears in the sheet, spreadsheet permissions are correct.
+function testWrite() {
+  const spreadsheet = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let sheet = spreadsheet.getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(SHEET_NAME);
+    sheet.appendRow([
+      "Timestamp",
+      "Name",
+      "Email",
+      "Business / Project",
+      "Message"
+    ]);
+  }
+
+  sheet.appendRow([
+    new Date(),
+    "Manual Apps Script Test",
+    "test@example.com",
+    "MFX Test",
+    "If you can see this row, Apps Script can write to this spreadsheet."
+  ]);
+
+  SpreadsheetApp.flush();
 }

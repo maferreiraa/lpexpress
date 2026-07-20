@@ -2,10 +2,7 @@
    EXPRESS LANDING PAGE — CONFIGURATION
    ========================================================= */
 
-// Messenger username / page ID
 const MESSENGER_USERNAME = "430269683495305";
-
-// Google Apps Script Web App URL
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0CtCbZ_OGbamPHuMJfHPKe-csI0iljmB3uh23kIhPGxhpsHPda6q2YKtw9hefUrIgeQ/exec";
 
 /* =========================================================
@@ -38,9 +35,7 @@ function initialiseFaq() {
 
       document.querySelectorAll(".faq-item.is-open").forEach((openItem) => {
         openItem.classList.remove("is-open");
-        openItem
-          .querySelector(".faq-question")
-          .setAttribute("aria-expanded", "false");
+        openItem.querySelector(".faq-question").setAttribute("aria-expanded", "false");
       });
 
       if (!isOpen) {
@@ -54,12 +49,7 @@ function initialiseFaq() {
 function initialiseContactForm() {
   const form = document.getElementById("contact-form");
 
-  if (!form) {
-    return;
-  }
-
-  // Keep HTML action synchronized with the Apps Script URL
-  form.action = APPS_SCRIPT_URL;
+  if (!form) return;
 
   const submitButton = form.querySelector(".form-submit");
   const status = form.querySelector(".form-status");
@@ -79,18 +69,22 @@ function initialiseContactForm() {
     submitButton.classList.add("is-loading");
 
     try {
-      const formData = new FormData(form);
+      // Send as application/x-www-form-urlencoded.
+      // This is parsed reliably by Apps Script through e.parameter.
+      const payload = new URLSearchParams();
 
-      /*
-        Google Apps Script Web Apps commonly redirect after POST.
-        Using no-cors avoids browser CORS blocking when the Apps Script
-        endpoint does not return Access-Control-Allow-Origin headers.
-        The submission still reaches the spreadsheet endpoint.
-      */
+      payload.append("name", form.querySelector("#name").value.trim());
+      payload.append("email", form.querySelector("#email").value.trim());
+      payload.append("business", form.querySelector("#business").value.trim());
+      payload.append("message", form.querySelector("#message").value.trim());
+
       await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        body: formData
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+        },
+        body: payload.toString()
       });
 
       form.reset();
@@ -144,9 +138,7 @@ function showFieldError(field, message) {
   group.classList.add("has-error");
   field.setAttribute("aria-invalid", "true");
 
-  if (error) {
-    error.textContent = message;
-  }
+  if (error) error.textContent = message;
 }
 
 function clearFieldErrors(form) {
@@ -156,13 +148,8 @@ function clearFieldErrors(form) {
     const field = group.querySelector("input, textarea");
     const error = group.querySelector(".field-error");
 
-    if (field) {
-      field.removeAttribute("aria-invalid");
-    }
-
-    if (error) {
-      error.textContent = "";
-    }
+    if (field) field.removeAttribute("aria-invalid");
+    if (error) error.textContent = "";
   });
 }
 
@@ -182,8 +169,5 @@ function clearStatus(element) {
 
 function updateFooterYear() {
   const yearElement = document.getElementById("current-year");
-
-  if (yearElement) {
-    yearElement.textContent = new Date().getFullYear();
-  }
+  if (yearElement) yearElement.textContent = new Date().getFullYear();
 }
