@@ -5,11 +5,11 @@
 
 // 1) Messenger username only — do not include @ or the full URL.
 // Example: const MESSENGER_USERNAME = "mfxcreativee";
-const MESSENGER_USERNAME = "SEU_USUARIO_AQUI";
+const MESSENGER_USERNAME = "430269683495305";
 
 // 2) Formspree endpoint.
 // Replace YOUR_FORM_ID in index.html:
-// https://formspree.io/f/YOUR_FORM_ID
+// https://formspree.io/f/xpqvrnrd
 
 /* =========================================================
    PAGE BEHAVIOUR
