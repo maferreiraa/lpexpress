@@ -1,16 +1,12 @@
 /* =========================================================
    EXPRESS LANDING PAGE — CONFIGURATION
-   Change only the values in this section before publishing.
    ========================================================= */
 
-// 1) Messenger username only — do not include @ or the full URL.
-// Example: const MESSENGER_USERNAME = "mfxcreativee";
-const MESSENGER_USERNAME = "SEU_USUARIO_AQUI";
+// Messenger username / page ID
+const MESSENGER_USERNAME = "430269683495305";
 
-// 2) Google Apps Script Web App URL.
-// After deploying your Apps Script as a Web App, paste the /exec URL here.
-// Example: https://script.google.com/macros/s/AKfycb.../exec
-const GOOGLE_SHEETS_WEB_APP_URL = "COLE_AQUI_A_URL_DO_APPS_SCRIPT";
+// Google Apps Script Web App URL
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby0CtCbZ_OGbamPHuMJfHPKe-csI0iljmB3uh23kIhPGxhpsHPda6q2YKtw9hefUrIgeQ/exec";
 
 /* =========================================================
    PAGE BEHAVIOUR
@@ -25,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function configureMessengerLinks() {
   const links = document.querySelectorAll(".messenger-link");
-  const messengerUrl = `https://m.me/${encodeURIComponent(MESSENGER_USERNAME)}`;
+  const messengerUrl = `https://m.me/${MESSENGER_USERNAME}`;
 
   links.forEach((link) => {
     link.href = messengerUrl;
@@ -42,7 +38,9 @@ function initialiseFaq() {
 
       document.querySelectorAll(".faq-item.is-open").forEach((openItem) => {
         openItem.classList.remove("is-open");
-        openItem.querySelector(".faq-question").setAttribute("aria-expanded", "false");
+        openItem
+          .querySelector(".faq-question")
+          .setAttribute("aria-expanded", "false");
       });
 
       if (!isOpen) {
@@ -56,13 +54,19 @@ function initialiseFaq() {
 function initialiseContactForm() {
   const form = document.getElementById("contact-form");
 
-  if (!form) return;
+  if (!form) {
+    return;
+  }
+
+  // Keep HTML action synchronized with the Apps Script URL
+  form.action = APPS_SCRIPT_URL;
 
   const submitButton = form.querySelector(".form-submit");
   const status = form.querySelector(".form-status");
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+
     clearFieldErrors(form);
     clearStatus(status);
 
@@ -71,42 +75,26 @@ function initialiseContactForm() {
       return;
     }
 
-    if (
-      !GOOGLE_SHEETS_WEB_APP_URL ||
-      GOOGLE_SHEETS_WEB_APP_URL.includes("COLE_AQUI") ||
-      !GOOGLE_SHEETS_WEB_APP_URL.includes("script.google.com")
-    ) {
-      setStatus(
-        status,
-        "The contact form is not connected yet. Please configure the Google Apps Script URL.",
-        "error"
-      );
-      return;
-    }
-
     submitButton.disabled = true;
     submitButton.classList.add("is-loading");
 
-    const payload = new URLSearchParams({
-      name: form.querySelector("#name").value.trim(),
-      email: form.querySelector("#email").value.trim(),
-      business: form.querySelector("#business").value.trim(),
-      message: form.querySelector("#message").value.trim()
-    });
-
     try {
-      // mode: "no-cors" avoids browser CORS issues commonly encountered
-      // with Apps Script Web Apps hosted on a different domain.
-      await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      const formData = new FormData(form);
+
+      /*
+        Google Apps Script Web Apps commonly redirect after POST.
+        Using no-cors avoids browser CORS blocking when the Apps Script
+        endpoint does not return Access-Control-Allow-Origin headers.
+        The submission still reaches the spreadsheet endpoint.
+      */
+      await fetch(APPS_SCRIPT_URL, {
         method: "POST",
         mode: "no-cors",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: payload.toString()
+        body: formData
       });
 
       form.reset();
+
       setStatus(
         status,
         "Thank you. Your message has been sent and I’ll reply as soon as possible.",
@@ -114,6 +102,7 @@ function initialiseContactForm() {
       );
     } catch (error) {
       console.error("Form submission error:", error);
+
       setStatus(
         status,
         "Something went wrong. Please try again or contact me through Messenger.",
@@ -128,6 +117,7 @@ function initialiseContactForm() {
 
 function validateForm(form) {
   let isValid = true;
+
   const nameField = form.querySelector("#name");
   const emailField = form.querySelector("#email");
 
@@ -150,18 +140,29 @@ function validateForm(form) {
 function showFieldError(field, message) {
   const group = field.closest(".form-group");
   const error = group.querySelector(".field-error");
+
   group.classList.add("has-error");
   field.setAttribute("aria-invalid", "true");
-  error.textContent = message;
+
+  if (error) {
+    error.textContent = message;
+  }
 }
 
 function clearFieldErrors(form) {
   form.querySelectorAll(".form-group.has-error").forEach((group) => {
     group.classList.remove("has-error");
+
     const field = group.querySelector("input, textarea");
     const error = group.querySelector(".field-error");
-    if (field) field.removeAttribute("aria-invalid");
-    if (error) error.textContent = "";
+
+    if (field) {
+      field.removeAttribute("aria-invalid");
+    }
+
+    if (error) {
+      error.textContent = "";
+    }
   });
 }
 
@@ -181,5 +182,8 @@ function clearStatus(element) {
 
 function updateFooterYear() {
   const yearElement = document.getElementById("current-year");
-  if (yearElement) yearElement.textContent = new Date().getFullYear();
+
+  if (yearElement) {
+    yearElement.textContent = new Date().getFullYear();
+  }
 }
