@@ -23,6 +23,12 @@ function trackMetaEvent(eventName, parameters = {}) {
   }
 }
 
+function trackGoogleEvent(eventName, parameters = {}) {
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, parameters);
+  }
+}
+
 function configureMessengerLinks() {
   const links = document.querySelectorAll(".messenger-link");
   const messengerUrl = `https://m.me/${MESSENGER_USERNAME}`;
@@ -34,6 +40,11 @@ function configureMessengerLinks() {
       trackMetaEvent("Contact", {
         content_name: "Messenger",
         contact_method: "Messenger"
+      });
+
+      // GA4 recommended event for contact-intent actions
+      trackGoogleEvent("contact", {
+        method: "Messenger"
       });
     });
   });
@@ -105,6 +116,12 @@ function initialiseContactForm() {
 
       // Meta Pixel: completed contact form submission
       trackMetaEvent("Lead", {
+        content_name: "Landing Page Enquiry",
+        lead_source: "Website Contact Form"
+      });
+
+      // GA4: completed contact form submission (recommended event name)
+      trackGoogleEvent("generate_lead", {
         content_name: "Landing Page Enquiry",
         lead_source: "Website Contact Form"
       });
